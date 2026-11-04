@@ -26,6 +26,7 @@ Di popup ada bagian **Rekap entry selesai**:
   3. **Detail** — satu baris per dokumen (ID, status, tanggal, NURT, Nama KRT, alamat)
 - Definisi: **selesai = `flag_error "C"`**, error = `"E"`, belum = lainnya. Operator = `user_modified`, hari = `date_modified` (zona WIT/Asia-Jayapura).
 - Data diambil langsung dari sesi login Anda (perlu login di tab SPDT); tidak ada data yang dikirim ke luar.
+- Pengambilan data dijalankan di **tab SPDT** (lewat content script), bukan dari popup, agar lolos Cloudflare. Karena itu **harus ada tab SPDT yang terbuka & sudah login**. Jika muncul error "Tidak terhubung ke tab SPDT", refresh tab SPDT lalu coba lagi.
 
 ## Pengaturan
 
@@ -68,7 +69,8 @@ Format ekstensi (Manifest V3) sama persis untuk Chrome dan Edge — satu folder 
 - `content.js` – freeze kolom komoditas + penanda baris aktif
 - `entry-helpers.js` – Enter pindah input + titik jadi koma desimal
 - `autosave.js` – auto-save dokumen berkala (durasi dari pengaturan)
-- `rekap.js` – ambil data + bangun & unduh rekap .xls (3 sheet)
+- `rekap.js` – hitung & bangun/unduh rekap .xls (popup)
+- `rekap-bridge.js` – ambil data di tab SPDT atas permintaan popup (content script)
 - `popup.html` / `popup.js` – halaman pengaturan + tombol rekap
 - `tools/rekap-entry-selesai.js` – versi console mandiri (tempel di DevTools)
 - `icons/` – ikon kuning (16/32/48/128)

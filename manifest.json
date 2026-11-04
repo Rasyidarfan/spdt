@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SPDT - Bantu Entri (Freeze Komoditas + Auto Save)",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Freeze kolom komoditas, penanda baris aktif, auto-save berkala, Enter pindah input, titik jadi koma desimal, dan unduh rekap entry selesai per operator per hari.",
   "permissions": ["storage"],
   "host_permissions": ["https://spdtntp.web.bps.go.id/*"],
@@ -24,7 +24,7 @@
   "content_scripts": [
     {
       "matches": ["https://spdtntp.web.bps.go.id/*"],
-      "js": ["content.js", "entry-helpers.js", "autosave.js"],
+      "js": ["content.js", "entry-helpers.js", "autosave.js", "rekap-bridge.js"],
       "run_at": "document_idle",
       "all_frames": false
     }

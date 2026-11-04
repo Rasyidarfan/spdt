@@ -45,17 +45,23 @@ window.SPDTRekap = (function () {
   }
 
   function kabOf(c, code) { return (c.kabName[code] || KNOWN[code] || code); }
-  function statusLabel(f) { return f === "C" ? "Selesai" : f === "E" ? "Error" : "Belum"; }
+  function statusLabel(s) { return s === "C" ? "Selesai" : s === "E" ? "Error" : "Belum"; }
 
-  async function tally(codes, kd) {
+  // Terapkan filter subsektor (kosong = semua).
+  function filterSub(recs, sub) {
+    if (!sub) return recs;
+    return recs.filter(function (r) { return r.kd_subsektor === sub; });
+  }
+
+  async function tally(codes, kd, sub) {
     var c = await load(codes, kd);
     return codes.map(function (code) {
-      var rs = c.recs.filter(function (r) { return r.code === code; });
+      var rs = filterSub(c.recs.filter(function (r) { return r.code === code; }), sub);
       return {
         code: code, nama: kabOf(c, code),
-        clean: rs.filter(function (r) { return r.flag === "C"; }).length,
-        error: rs.filter(function (r) { return r.flag === "E"; }).length,
-        belum: rs.filter(function (r) { return r.flag !== "C" && r.flag !== "E"; }).length,
+        clean: rs.filter(function (r) { return r.status === "C"; }).length,
+        error: rs.filter(function (r) { return r.status === "E"; }).length,
+        belum: rs.filter(function (r) { return r.status === "B"; }).length,
         total: rs.length,
       };
     });
@@ -85,54 +91,64 @@ window.SPDTRekap = (function () {
     document.body.appendChild(a); a.click(); a.remove();
   }
 
-  async function generate(codes, kd) {
+  async function generate(codes, kd, sub) {
     var c = await load(codes, kd);
-    var recs = c.recs, userMap = c.userMap;
+    var recs = filterSub(c.recs, sub);
+    var userMap = c.userMap;
     var nm = function (uid) { return userMap[uid] || {}; };
-    var selesai = recs.filter(function (r) { return r.flag === "C"; });
-    var dates = Array.from(new Set(selesai.map(function (r) { return r.tanggal; }))).sort();
-    var kues = Array.from(new Set(recs.map(function (r) { return r.kd_kuesioner; }))).sort();
+    var clean = recs.filter(function (r) { return r.status === "C"; });
+    var dates = Array.from(new Set(clean.map(function (r) { return r.tanggal; }).filter(Boolean))).sort();
 
+    // Sheet 1: Pivot Harian (operator x tanggal, sampel selesai) + Total/Error
     var ops = {};
     recs.forEach(function (r) {
+      if (r.uid == null) return; // sampel belum dientry: tanpa operator
       var k = r.code + "|" + r.uid;
-      var o = ops[k] || (ops[k] = { code: r.code, uid: r.uid, perHari: {}, perKues: {}, C: 0, E: 0, B: 0 });
-      if (r.flag === "C") { o.C++; o.perHari[r.tanggal] = (o.perHari[r.tanggal] || 0) + 1; o.perKues[r.kd_kuesioner] = (o.perKues[r.kd_kuesioner] || 0) + 1; }
-      else if (r.flag === "E") o.E++;
-      else o.B++;
+      var o = ops[k] || (ops[k] = { code: r.code, uid: r.uid, perHari: {}, C: 0, E: 0 });
+      if (r.status === "C") { o.C++; o.perHari[r.tanggal] = (o.perHari[r.tanggal] || 0) + 1; }
+      else if (r.status === "E") o.E++;
     });
     var list = Object.values(ops).sort(function (a, b) {
       return kabOf(c, a.code).localeCompare(kabOf(c, b.code)) || b.C - a.C;
     });
-
-    var s1 = [["No", "Kabupaten", "Username", "Nama"].concat(dates, ["Total Selesai", "Error", "Belum"])];
+    var s1 = [["No", "Kabupaten", "Username", "Nama"].concat(dates, ["Total Selesai", "Error"])];
     list.forEach(function (o, i) {
       s1.push([i + 1, kabOf(c, o.code), nm(o.uid).username || ("ID " + o.uid), nm(o.uid).nama || ""]
-        .concat(dates.map(function (d) { return o.perHari[d] || 0; }), [o.C, o.E, o.B]));
+        .concat(dates.map(function (d) { return o.perHari[d] || 0; }), [o.C, o.E]));
     });
     s1.push(["", "TOTAL", "", ""].concat(
-      dates.map(function (d) { return selesai.filter(function (r) { return r.tanggal === d; }).length; }),
-      [selesai.length, recs.filter(function (r) { return r.flag === "E"; }).length,
-       recs.filter(function (r) { return r.flag !== "C" && r.flag !== "E"; }).length]));
+      dates.map(function (d) { return clean.filter(function (r) { return r.tanggal === d; }).length; }),
+      [clean.length, recs.filter(function (r) { return r.status === "E"; }).length]));
 
-    var s2 = [["No", "Kabupaten", "Username", "Nama"].concat(kues.map(function (k) { return "K" + k; }), ["Total Selesai"])];
-    list.forEach(function (o, i) {
-      s2.push([i + 1, kabOf(c, o.code), nm(o.uid).username || ("ID " + o.uid), nm(o.uid).nama || ""]
-        .concat(kues.map(function (k) { return o.perKues[k] || 0; }), [o.C]));
+    // Sheet 2: Ringkasan per Kabupaten (berbasis SAMPEL)
+    var s2 = [["No", "Kabupaten", "Total Sampel", "Clean", "Error", "Belum"]];
+    codes.forEach(function (code, i) {
+      var rs = recs.filter(function (r) { return r.code === code; });
+      s2.push([i + 1, kabOf(c, code), rs.length,
+        rs.filter(function (r) { return r.status === "C"; }).length,
+        rs.filter(function (r) { return r.status === "E"; }).length,
+        rs.filter(function (r) { return r.status === "B"; }).length]);
     });
+    s2.push(["", "TOTAL", recs.length,
+      recs.filter(function (r) { return r.status === "C"; }).length,
+      recs.filter(function (r) { return r.status === "E"; }).length,
+      recs.filter(function (r) { return r.status === "B"; }).length]);
 
-    var s3 = [["Kabupaten", "ID Sample", "ID Dokumen", "Kuesioner", "Username", "Nama", "Status", "Tanggal", "NURT", "Nama KRT", "Alamat"]];
+    // Sheet 3: Detail (satu baris per SAMPEL)
+    var s3 = [["Kabupaten", "ID Sample", "Subsektor", "Kuesioner", "Status", "Username", "Nama", "Tanggal", "NURT", "Nama KRT", "Alamat"]];
     recs.slice().sort(function (a, b) {
-      return kabOf(c, a.code).localeCompare(kabOf(c, b.code)) || a.tanggal.localeCompare(b.tanggal);
+      return kabOf(c, a.code).localeCompare(kabOf(c, b.code)) ||
+        (a.status).localeCompare(b.status) || ("" + a.tanggal).localeCompare("" + b.tanggal);
     }).forEach(function (r) {
-      s3.push([kabOf(c, r.code), r.id_sample, r.id_dokumen, r.kd_kuesioner, nm(r.uid).username || ("ID " + r.uid),
-        nm(r.uid).nama || "", statusLabel(r.flag), r.tanggal, r.nurt, r.nama_krt, r.alamat]);
+      s3.push([kabOf(c, r.code), r.id_sample, r.kd_subsektor, r.kues, statusLabel(r.status),
+        r.uid ? (nm(r.uid).username || ("ID " + r.uid)) : "", r.uid ? (nm(r.uid).nama || "") : "",
+        r.tanggal, r.nurt, r.nama_krt, r.alamat]);
     });
 
-    var xml = workbook([sheetXml("Pivot Harian", s1), sheetXml("Per Kuesioner", s2), sheetXml("Detail", s3)]);
+    var xml = workbook([sheetXml("Pivot Harian", s1), sheetXml("Ringkasan Kabupaten", s2), sheetXml("Detail", s3)]);
     var today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jayapura" }).format(new Date()).replace(/-/g, "");
     download(xml, "rekap_entry_selesai_" + today + ".xls");
-    return { operator: list.length, selesai: selesai.length, dates: dates };
+    return { operator: list.length, selesai: clean.length, total: recs.length, dates: dates };
   }
 
   return { defaultKabs: defaultKabs, parseCodes: parseCodes, tally: tally, generate: generate };

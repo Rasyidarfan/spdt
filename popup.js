@@ -49,6 +49,7 @@ secEl.addEventListener("blur", commitSeconds);
 // ---- Rekap (unduh .xls + tally Clean/Error) ----
 const rkKabs = document.getElementById("rkKabs");
 const rkKd = document.getElementById("rkKd");
+const rkSub = document.getElementById("rkSub");
 const rkBtn = document.getElementById("rkDownload");
 const rkRefresh = document.getElementById("rkRefresh");
 const rkStatus = document.getElementById("rkStatus");
@@ -79,10 +80,11 @@ async function refreshCounts() {
   const codes = currentCodes();
   if (!codes.length) { setRk("Isi kode kabupaten dulu.", "err"); return; }
   const kd = (rkKd.value || "08").trim();
+  const sub = (rkSub.value || "").trim();
   rkRefresh.disabled = true; rkBtn.disabled = true;
   setRk("Mengambil data…");
   try {
-    const rows = await window.SPDTRekap.tally(codes, kd, (m) => setRk(m));
+    const rows = await window.SPDTRekap.tally(codes, kd, sub);
     renderCounts(rows);
     setRk("Diperbarui.", "ok");
   } catch (e) {
@@ -98,11 +100,12 @@ rkBtn.addEventListener("click", async () => {
   const codes = currentCodes();
   if (!codes.length) { setRk("Isi kode kabupaten dulu.", "err"); return; }
   const kd = (rkKd.value || "08").trim();
+  const sub = (rkSub.value || "").trim();
   rkBtn.disabled = true; rkRefresh.disabled = true;
   setRk("Menyiapkan unduhan…");
   try {
-    const res = await window.SPDTRekap.generate(codes, kd, (m) => setRk(m));
-    setRk(`Terunduh · ${res.operator} operator · ${res.selesai} selesai`, "ok");
+    const res = await window.SPDTRekap.generate(codes, kd, sub);
+    setRk(`Terunduh · ${res.selesai} selesai / ${res.total} sampel`, "ok");
   } catch (e) {
     setRk("Gagal: " + (e && e.message ? e.message : e), "err");
   } finally {
@@ -113,11 +116,13 @@ rkBtn.addEventListener("click", async () => {
 // simpan kabupaten & kuesioner di memori browser
 rkKabs.addEventListener("change", () => chrome.storage.local.set({ rekapKabs: rkKabs.value }));
 rkKd.addEventListener("change", () => chrome.storage.local.set({ rekapKd: rkKd.value }));
+rkSub.addEventListener("change", () => chrome.storage.local.set({ rekapSub: rkSub.value }));
 
 // muat nilai tersimpan; jika kabupaten belum ada, ambil default dari /petugas
 (async () => {
-  const v = await chrome.storage.local.get({ rekapKabs: "", rekapKd: "08" });
+  const v = await chrome.storage.local.get({ rekapKabs: "", rekapKd: "08", rekapSub: "" });
   rkKd.value = v.rekapKd || "08";
+  rkSub.value = v.rekapSub || "";
   if (v.rekapKabs && v.rekapKabs.trim()) {
     rkKabs.value = v.rekapKabs;
   } else {

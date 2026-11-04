@@ -17,14 +17,15 @@ Ekstensi Chrome/Edge yang membuat **kolom komoditas (Kode + Jenis Barang)** pada
 
 Di popup ada bagian **Rekap entry selesai**:
 
-- **Kabupaten**: isi kode kabupaten dipisah koma, mis. `9702, 9705, 9706`. Nilai ini **tersimpan di memori browser**; bila belum ada, default diambil dari `/petugas` (kabupaten petugas digabung daftar Papua Pegunungan).
-- **Kuesioner**: kode kuesioner (default `08`), juga tersimpan.
-- **Tabel Clean / Error / Belum** per kabupaten tampil otomatis; tombol **↻ Refresh** untuk memperbarui manual.
-- Klik **Unduh .xls** → `rekap_entry_selesai_YYYYMMDD.xls` berisi **semua tanggal**, 3 sheet:
-  1. **Pivot Harian** — operator × tanggal (jumlah selesai) + Total Selesai, Error, Belum
-  2. **Per Kuesioner** — operator × kode kuesioner
-  3. **Detail** — satu baris per dokumen (ID, status, tanggal, NURT, Nama KRT, alamat)
-- Definisi: **selesai = `flag_error "C"`**, error = `"E"`, belum = lainnya. Operator = `user_modified`, hari = `date_modified` (zona WIT/Asia-Jayapura).
+- **Kabupaten**: isi kode kabupaten dipisah koma, mis. `9702, 9705, 9706`. **Tersimpan di memori browser**; bila belum ada, default diambil dari `/petugas`.
+- **Kuesioner**: kode kuesioner (default `08`), tersimpan.
+- **Subsektor**: kosong = semua subsektor; isi `1` untuk Tanaman Pangan (TP) — ini yang cocok dengan tampilan "Daftar Sampel" di UI.
+- **Tabel Clean / Error / Belum** per kabupaten tampil otomatis; tombol **↻ Refresh** untuk memperbarui.
+- Klik **Unduh .xls** → `rekap_entry_selesai_YYYYMMDD.xls`, 3 sheet:
+  1. **Pivot Harian** — operator × tanggal (sampel selesai) + Total Selesai, Error
+  2. **Ringkasan Kabupaten** — Total Sampel / Clean / Error / Belum per kabupaten
+  3. **Detail** — satu baris per **sampel** (status, subsektor, operator, tanggal, NURT, Nama KRT, alamat)
+- **Berbasis sampel**: universe = seluruh sampel (bukan hanya yang sudah dientry), jadi "Belum" mencakup sampel yang belum dikerjakan. Status per sampel untuk kuesioner terpilih: **Clean = `flag_error "C"`**, Error = `"E"`, Belum = belum ada dokumen/`flag` lain. Operator = `user_modified`, hari = `date_modified` (WIT).
 - Data diambil langsung dari sesi login Anda (perlu login di tab SPDT); tidak ada data yang dikirim ke luar.
 - Pengambilan data dijalankan di **tab SPDT** (lewat content script), bukan dari popup, agar lolos Cloudflare. Karena itu **harus ada tab SPDT yang terbuka & sudah login**. Jika muncul error "Tidak terhubung ke tab SPDT", refresh tab SPDT lalu coba lagi.
 

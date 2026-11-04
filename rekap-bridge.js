@@ -32,6 +32,10 @@
     return out;
   }
 
+  // Satu record PER SAMPEL (bukan per dokumen). Status untuk kuesioner terpilih:
+  //   C = dokumen kuesioner itu flag_error "C" (selesai)
+  //   E = flag_error "E" (error)
+  //   B = belum ada dokumen kuesioner itu / flag lain (belum)
   async function load(codes, kd) {
     kd = kd || "08";
     var userMap = {}, recs = [], kabName = {};
@@ -47,12 +51,14 @@
         return function (p) { return BASE + "/api/sample?page=" + p + "&full_code=" + code + "&kd_kuesioner=" + kd + "&search=&per_page=100"; };
       })(code))).forEach(function (s) {
         if (s.kabupaten && s.kabupaten.nama_kab) kabName[code] = s.kabupaten.nama_kab;
-        (s.dokumens || []).forEach(function (d) {
-          recs.push({
-            code: code, id_sample: s.id_sample, id_dokumen: d.id_dokumen,
-            kd_kuesioner: d.kd_kuesioner, uid: d.user_modified, flag: d.flag_error,
-            tanggal: tgl(d.date_modified), nurt: s.nurt, nama_krt: s.nama_krt, alamat: s.alamat,
-          });
+        var docs = s.dokumens || [];
+        var doc = docs.find(function (d) { return d.kd_kuesioner === kd; }) || null;
+        var status = doc ? (doc.flag_error === "C" ? "C" : (doc.flag_error === "E" ? "E" : "B")) : "B";
+        recs.push({
+          code: code, id_sample: s.id_sample, kd_subsektor: ("" + (s.kd_subsektor || "")).trim(),
+          status: status, uid: doc ? doc.user_modified : null,
+          tanggal: doc ? tgl(doc.date_modified) : "", kues: kd,
+          nurt: s.nurt, nama_krt: s.nama_krt, alamat: s.alamat,
         });
       });
     }

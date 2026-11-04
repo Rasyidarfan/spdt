@@ -13,6 +13,18 @@ Ekstensi Chrome/Edge yang membuat **kolom komoditas (Kode + Jenis Barang)** pada
 - **Halaman pengaturan** (klik ikon ekstensi) untuk menyalakan/mematikan tiap fitur & mengatur durasi auto-save
 - Menyesuaikan sendiri saat baris ditambah, pindah tab (Blok V/VI/VII), atau ukuran jendela berubah
 
+## Rekap entry selesai
+
+Di popup ada bagian **Rekap entry selesai**:
+
+- Pilih **kabupaten** (Jayawijaya / Mamberamo Tengah / Yalimo), **kode kuesioner**, dan rentang **tanggal** (opsional).
+- Klik **Unduh Rekap (.xls)** → file `rekap_entry_selesai_YYYYMMDD.xls` berisi 3 sheet:
+  1. **Pivot Harian** — operator × tanggal (jumlah selesai) + kolom Total Selesai, Error, Belum
+  2. **Per Kuesioner** — operator × kode kuesioner
+  3. **Detail** — satu baris per dokumen (ID, status, tanggal, NURT, Nama KRT, alamat)
+- Definisi: **selesai = `flag_error "C"`**, error = `"E"`, belum = lainnya. Operator = `user_modified`, hari = `date_modified` (zona WIT/Asia-Jayapura).
+- Data diambil langsung dari sesi login Anda (perlu login di tab SPDT); tidak ada data yang dikirim ke luar.
+
 ## Pengaturan
 
 Klik ikon ekstensi (kuning) di toolbar untuk membuka pengaturan:
@@ -54,5 +66,7 @@ Format ekstensi (Manifest V3) sama persis untuk Chrome dan Edge — satu folder 
 - `content.js` – freeze kolom komoditas + penanda baris aktif
 - `entry-helpers.js` – Enter pindah input + titik jadi koma desimal
 - `autosave.js` – auto-save dokumen berkala (durasi dari pengaturan)
-- `popup.html` / `popup.js` – halaman pengaturan
+- `rekap.js` – ambil data + bangun & unduh rekap .xls (3 sheet)
+- `popup.html` / `popup.js` – halaman pengaturan + tombol rekap
+- `tools/rekap-entry-selesai.js` – versi console mandiri (tempel di DevTools)
 - `icons/` – ikon kuning (16/32/48/128)

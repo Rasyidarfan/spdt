@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
   "name": "SPDT - Bantu Entri (Freeze Komoditas + Auto Save)",
-  "version": "1.3.0",
-  "description": "Freeze kolom komoditas, penanda baris aktif, auto-save berkala (durasi diatur), Enter pindah input, dan titik jadi koma desimal.",
+  "version": "1.4.0",
+  "description": "Freeze kolom komoditas, penanda baris aktif, auto-save berkala, Enter pindah input, titik jadi koma desimal, dan unduh rekap entry selesai per operator per hari.",
   "permissions": ["storage"],
+  "host_permissions": ["https://spdtntp.web.bps.go.id/*"],
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",

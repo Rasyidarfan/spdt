@@ -45,3 +45,37 @@ function commitSeconds() {
 }
 secEl.addEventListener("change", commitSeconds);
 secEl.addEventListener("blur", commitSeconds);
+
+// ---- Rekap (unduh .xls) ----
+const KAB_NAMES = { "9702": "JAYAWIJAYA", "9705": "MAMBERAMO TENGAH", "9706": "YALIMO" };
+const rkBtn = document.getElementById("rkDownload");
+const rkStatus = document.getElementById("rkStatus");
+
+function setRk(msg, cls) {
+  rkStatus.textContent = msg || "";
+  rkStatus.className = "rk-status" + (cls ? " " + cls : "");
+}
+
+rkBtn.addEventListener("click", async () => {
+  const kabs = {};
+  document.querySelectorAll(".kab:checked").forEach((c) => { kabs[c.value] = KAB_NAMES[c.value]; });
+  if (!Object.keys(kabs).length) { setRk("Pilih minimal satu kabupaten.", "err"); return; }
+
+  const kd = (document.getElementById("rkKd").value || "08").trim();
+  const dateFrom = document.getElementById("rkFrom").value;
+  const dateTo = document.getElementById("rkTo").value;
+
+  rkBtn.disabled = true;
+  setRk("Memulai…");
+  try {
+    const res = await window.SPDTRekap.generate({
+      kabs, kd, dateFrom, dateTo,
+      onProgress: (m) => setRk(m),
+    });
+    setRk(`Terunduh · ${res.operator} operator · ${res.selesai} selesai`, "ok");
+  } catch (e) {
+    setRk("Gagal: " + (e && e.message ? e.message : e), "err");
+  } finally {
+    rkBtn.disabled = false;
+  }
+});

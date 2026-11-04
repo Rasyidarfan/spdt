@@ -49,6 +49,26 @@
       opacity: 0; transition: opacity .2s;
     }
     .status.show { opacity: 1; }
+    .section { margin-top: 14px; border-top: 2px solid #27272a; padding-top: 10px; }
+    .sec-title { font-size: 13px; font-weight: 700; color: #facc15; margin-bottom: 2px; }
+    .kab-list { display: flex; flex-direction: column; gap: 5px; margin: 8px 0; }
+    .kab-list label { display: flex; align-items: center; gap: 7px; font-size: 12px; cursor: pointer; }
+    .field { display: flex; align-items: center; justify-content: space-between; margin: 6px 0; }
+    .field span { font-size: 12px; color: #d4d4d8; }
+    .field input {
+      padding: 5px 8px; background: #0b0b0c; color: #fff;
+      border: 1px solid #3f3f46; border-radius: 6px; font: inherit; width: 150px;
+    }
+    .field input:focus { outline: 2px solid #facc15; border-color: #facc15; }
+    .btn {
+      width: 100%; margin-top: 10px; padding: 9px; border: 0; border-radius: 8px;
+      background: #facc15; color: #18181b; font: 700 13px system-ui; cursor: pointer;
+    }
+    .btn:hover { filter: brightness(1.05); }
+    .btn:disabled { opacity: .6; cursor: default; }
+    .rk-status { margin-top: 8px; font-size: 11px; color: #a1a1aa; min-height: 14px; text-align: center; }
+    .rk-status.ok { color: #22c55e; }
+    .rk-status.err { color: #f87171; }
   </style>
 </head>
 <body>
@@ -100,6 +120,25 @@
 
   <div class="status" id="status">Tersimpan</div>
 
+  <div class="section">
+    <div class="sec-title">Rekap entry selesai</div>
+    <div class="desc" style="margin-bottom:8px">Unduh rekap per operator per hari (.xls)</div>
+
+    <div class="kab-list">
+      <label><input type="checkbox" class="kab" value="9702" checked /> Jayawijaya</label>
+      <label><input type="checkbox" class="kab" value="9705" checked /> Mamberamo Tengah</label>
+      <label><input type="checkbox" class="kab" value="9706" checked /> Yalimo</label>
+    </div>
+
+    <div class="field"><span>Kuesioner</span><input type="text" id="rkKd" value="08" /></div>
+    <div class="field"><span>Dari tgl</span><input type="date" id="rkFrom" /></div>
+    <div class="field"><span>Sampai</span><input type="date" id="rkTo" /></div>
+
+    <button id="rkDownload" class="btn">Unduh Rekap (.xls)</button>
+    <div class="rk-status" id="rkStatus"></div>
+  </div>
+
+  <script src="rekap.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

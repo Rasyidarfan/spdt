@@ -61,14 +61,23 @@
     }
     .field input:focus { outline: 2px solid #facc15; border-color: #facc15; }
     .btn {
-      width: 100%; margin-top: 10px; padding: 9px; border: 0; border-radius: 8px;
+      flex: 1; margin-top: 0; padding: 9px; border: 0; border-radius: 8px;
       background: #facc15; color: #18181b; font: 700 13px system-ui; cursor: pointer;
     }
     .btn:hover { filter: brightness(1.05); }
     .btn:disabled { opacity: .6; cursor: default; }
+    .btn-sec { background: #3f3f46; color: #f4f4f5; }
+    .btn-row { display: flex; gap: 8px; margin-top: 10px; }
     .rk-status { margin-top: 8px; font-size: 11px; color: #a1a1aa; min-height: 14px; text-align: center; }
     .rk-status.ok { color: #22c55e; }
     .rk-status.err { color: #f87171; }
+    .rk-counts { width: 100%; border-collapse: collapse; font-size: 11px; margin: 4px 0; }
+    .rk-counts th, .rk-counts td { padding: 4px 6px; border-bottom: 1px solid #27272a; text-align: right; }
+    .rk-counts th:first-child, .rk-counts td:first-child { text-align: left; }
+    .rk-counts thead th { color: #a1a1aa; font-weight: 600; }
+    .rk-counts .c-clean { color: #22c55e; font-weight: 700; }
+    .rk-counts .c-err { color: #f87171; font-weight: 700; }
+    .rk-counts tfoot td { font-weight: 700; border-top: 1px solid #3f3f46; }
   </style>
 </head>
 <body>
@@ -122,19 +131,18 @@
 
   <div class="section">
     <div class="sec-title">Rekap entry selesai</div>
-    <div class="desc" style="margin-bottom:8px">Unduh rekap per operator per hari (.xls)</div>
+    <div class="desc" style="margin-bottom:8px">Jumlah entry per operator per hari (.xls)</div>
 
-    <div class="kab-list">
-      <label><input type="checkbox" class="kab" value="9702" checked /> Jayawijaya</label>
-      <label><input type="checkbox" class="kab" value="9705" checked /> Mamberamo Tengah</label>
-      <label><input type="checkbox" class="kab" value="9706" checked /> Yalimo</label>
-    </div>
-
+    <div class="field"><span>Kabupaten</span><input type="text" id="rkKabs" placeholder="9702, 9705, 9706" /></div>
     <div class="field"><span>Kuesioner</span><input type="text" id="rkKd" value="08" /></div>
-    <div class="field"><span>Dari tgl</span><input type="date" id="rkFrom" /></div>
-    <div class="field"><span>Sampai</span><input type="date" id="rkTo" /></div>
+    <div class="desc" style="margin:-2px 0 8px">Kode kabupaten dipisah koma. Tersimpan otomatis.</div>
 
-    <button id="rkDownload" class="btn">Unduh Rekap (.xls)</button>
+    <table class="rk-counts" id="rkCounts"></table>
+
+    <div class="btn-row">
+      <button id="rkRefresh" class="btn btn-sec">↻ Refresh</button>
+      <button id="rkDownload" class="btn">Unduh .xls</button>
+    </div>
     <div class="rk-status" id="rkStatus"></div>
   </div>
 

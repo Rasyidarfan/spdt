@@ -17,9 +17,11 @@ Ekstensi Chrome/Edge yang membuat **kolom komoditas (Kode + Jenis Barang)** pada
 
 Di popup ada bagian **Rekap entry selesai**:
 
-- Pilih **kabupaten** (Jayawijaya / Mamberamo Tengah / Yalimo), **kode kuesioner**, dan rentang **tanggal** (opsional).
-- Klik **Unduh Rekap (.xls)** → file `rekap_entry_selesai_YYYYMMDD.xls` berisi 3 sheet:
-  1. **Pivot Harian** — operator × tanggal (jumlah selesai) + kolom Total Selesai, Error, Belum
+- **Kabupaten**: isi kode kabupaten dipisah koma, mis. `9702, 9705, 9706`. Nilai ini **tersimpan di memori browser**; bila belum ada, default diambil dari `/petugas` (kabupaten petugas digabung daftar Papua Pegunungan).
+- **Kuesioner**: kode kuesioner (default `08`), juga tersimpan.
+- **Tabel Clean / Error / Belum** per kabupaten tampil otomatis; tombol **↻ Refresh** untuk memperbarui manual.
+- Klik **Unduh .xls** → `rekap_entry_selesai_YYYYMMDD.xls` berisi **semua tanggal**, 3 sheet:
+  1. **Pivot Harian** — operator × tanggal (jumlah selesai) + Total Selesai, Error, Belum
   2. **Per Kuesioner** — operator × kode kuesioner
   3. **Detail** — satu baris per dokumen (ID, status, tanggal, NURT, Nama KRT, alamat)
 - Definisi: **selesai = `flag_error "C"`**, error = `"E"`, belum = lainnya. Operator = `user_modified`, hari = `date_modified` (zona WIT/Asia-Jayapura).

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pengaturan SPDT</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      width: 300px; margin: 0; padding: 14px 16px;
+      font: 13px/1.45 system-ui, -apple-system, sans-serif;
+      background: #18181b; color: #f4f4f5;
+    }
+    h1 {
+      font-size: 14px; margin: 0 0 2px; display: flex; align-items: center; gap: 8px;
+    }
+    h1 .dot { width: 14px; height: 14px; border-radius: 4px; background: #facc15; display: inline-block; }
+    .sub { color: #a1a1aa; font-size: 11px; margin: 0 0 12px; }
+    .row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 0; border-top: 1px solid #27272a; gap: 10px;
+    }
+    .row .label { font-weight: 600; }
+    .row .desc { color: #a1a1aa; font-size: 11px; margin-top: 2px; }
+    .dur { display: flex; align-items: center; gap: 6px; }
+    .dur input {
+      width: 64px; padding: 6px 8px; text-align: right;
+      background: #0b0b0c; color: #fff; border: 1px solid #3f3f46; border-radius: 6px;
+      font: inherit;
+    }
+    .dur input:focus { outline: 2px solid #facc15; border-color: #facc15; }
+    .dur .unit { color: #a1a1aa; font-size: 11px; }
+    /* toggle switch */
+    .switch { position: relative; width: 40px; height: 22px; flex: 0 0 auto; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0; cursor: pointer; background: #3f3f46;
+      border-radius: 999px; transition: .2s;
+    }
+    .slider::before {
+      content: ""; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px;
+      background: #fff; border-radius: 50%; transition: .2s;
+    }
+    .switch input:checked + .slider { background: #facc15; }
+    .switch input:checked + .slider::before { transform: translateX(18px); }
+    .status {
+      margin-top: 12px; font-size: 11px; color: #22c55e; height: 14px; text-align: center;
+      opacity: 0; transition: opacity .2s;
+    }
+    .status.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <h1><span class="dot"></span> Bantu Entri SPDT</h1>
+  <p class="sub">Pengaturan untuk halaman entri dokumen SPDT.</p>
+
+  <div class="row">
+    <div>
+      <div class="label">Auto-save</div>
+      <div class="desc">Simpan otomatis berkala</div>
+    </div>
+    <label class="switch"><input type="checkbox" id="autosaveEnabled" /><span class="slider"></span></label>
+  </div>
+
+  <div class="row">
+    <div>
+      <div class="label">Durasi auto-save</div>
+      <div class="desc">Minimal 5 detik</div>
+    </div>
+    <div class="dur">
+      <input type="number" id="autosaveSeconds" min="5" max="3600" step="5" />
+      <span class="unit">detik</span>
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <div class="label">Enter = pindah input</div>
+      <div class="desc">Tekan Enter untuk ke kolom berikutnya</div>
+    </div>
+    <label class="switch"><input type="checkbox" id="enterNav" /><span class="slider"></span></label>
+  </div>
+
+  <div class="row">
+    <div>
+      <div class="label">Titik jadi koma</div>
+      <div class="desc">Ketik "." untuk desimal "," </div>
+    </div>
+    <label class="switch"><input type="checkbox" id="commaDecimal" /><span class="slider"></span></label>
+  </div>
+
+  <div class="row">
+    <div>
+      <div class="label">Freeze kolom komoditas</div>
+      <div class="desc">Komoditas tetap terlihat saat scroll</div>
+    </div>
+    <label class="switch"><input type="checkbox" id="freeze" /><span class="slider"></span></label>
+  </div>
+
+  <div class="status" id="status">Tersimpan</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -2,12 +2,11 @@
 const DEFAULTS = {
   autosaveEnabled: true,
   autosaveSeconds: 100,
-  enterNav: true,
   commaDecimal: true,
-  freeze: true,
+  markerBaris: true,
 };
 
-const BOOL_KEYS = ["autosaveEnabled", "enterNav", "commaDecimal", "freeze"];
+const BOOL_KEYS = ["autosaveEnabled", "commaDecimal", "markerBaris"];
 const statusEl = document.getElementById("status");
 let statusTimer = null;
 
@@ -45,6 +44,104 @@ function commitSeconds() {
 }
 secEl.addEventListener("change", commitSeconds);
 secEl.addEventListener("blur", commitSeconds);
+
+// ---- Backup draf dokumen ----
+const bkList = document.getElementById("bkList");
+const bkRefresh = document.getElementById("bkRefresh");
+const bkDownloadAll = document.getElementById("bkDownloadAll");
+const bkStatus = document.getElementById("bkStatus");
+
+function setBk(msg, cls) {
+  bkStatus.textContent = msg || "";
+  bkStatus.className = "rk-status" + (cls ? " " + cls : "");
+}
+
+async function bkBridge(cmd, extra) {
+  const tabs = await chrome.tabs.query({ url: "https://spdtntp.web.bps.go.id/*" });
+  if (!tabs.length) throw new Error("Buka tab SPDT dulu.");
+  const tab = tabs.find((t) => t.active) || tabs[0];
+  let resp;
+  try {
+    resp = await chrome.tabs.sendMessage(tab.id, Object.assign({ type: "SPDT_BK", cmd }, extra || {}));
+  } catch (e) {
+    throw new Error("Tidak terhubung ke tab SPDT. Refresh tab SPDT lalu coba lagi.");
+  }
+  if (!resp || !resp.ok) throw new Error((resp && resp.error) || "Gagal.");
+  return resp;
+}
+
+function fmtTime(ms) {
+  try {
+    return new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jayapura", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(ms));
+  } catch (e) { return ""; }
+}
+
+function downloadJson(text, filename) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+  a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+function bkFileName(m) {
+  return "spdt_backup_" + (m.encrypted_id || m.id_dokumen) + "_K" + (m.kd_kuesioner || "") + "_" +
+    new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19) + ".json";
+}
+
+async function downloadOne(key) {
+  setBk("Menyiapkan…");
+  const r = await bkBridge("get", { key });
+  if (!r.rec) { setBk("Cadangan tidak ada.", "err"); return; }
+  downloadJson(r.rec.body, bkFileName(r.rec.meta));
+  setBk("Terunduh.", "ok");
+}
+
+async function deleteOne(key) {
+  await bkBridge("delete", { key });
+  await refreshBackups();
+}
+
+function renderBackups(items, activeEnc) {
+  if (!items || !items.length) { bkList.innerHTML = '<tbody><tr><td style="text-align:left;color:#a1a1aa">Belum ada cadangan. Buka dokumen & klik Simpan.</td></tr></tbody>'; return; }
+  const rows = items.map((it) => {
+    const m = it.meta || {};
+    const act = (activeEnc && m.encrypted_id === activeEnc) ? ' style="background:rgba(250,204,21,.12)"' : "";
+    const st = it.status === 200 ? "" : (it.status ? ' · <span class="c-err">gagal</span>' : "");
+    const label = (m.kab || m.full_code || "") + " · " + (m.nurt || "") + "<br><span style=\"color:#a1a1aa\">" + (m.nama_krt || "") + " · K" + (m.kd_kuesioner || "") + " · " + fmtTime(it.at) + st + "</span>";
+    return "<tr" + act + "><td style=\"text-align:left\">" + label + "</td>" +
+      "<td><button class=\"bk-dl\" data-key=\"" + it.key + "\" style=\"cursor:pointer;background:#facc15;border:0;border-radius:5px;padding:3px 7px;font-weight:700\">⬇</button> " +
+      "<button class=\"bk-del\" data-key=\"" + it.key + "\" style=\"cursor:pointer;background:#3f3f46;color:#f4f4f5;border:0;border-radius:5px;padding:3px 7px\">✕</button></td></tr>";
+  }).join("");
+  bkList.innerHTML = "<tbody>" + rows + "</tbody>";
+  bkList.querySelectorAll(".bk-dl").forEach((b) => b.addEventListener("click", () => downloadOne(b.dataset.key).catch((e) => setBk("Gagal: " + e.message, "err"))));
+  bkList.querySelectorAll(".bk-del").forEach((b) => b.addEventListener("click", () => deleteOne(b.dataset.key).catch((e) => setBk("Gagal: " + e.message, "err"))));
+}
+
+async function refreshBackups() {
+  setBk("Memuat…");
+  try {
+    const r = await bkBridge("list");
+    renderBackups(r.items, r.activeEnc);
+    setBk(r.items.length ? (r.items.length + " dokumen tercadang") : "", r.items.length ? "ok" : "");
+  } catch (e) {
+    setBk("Gagal: " + e.message, "err");
+    bkList.innerHTML = "";
+  }
+}
+
+bkRefresh.addEventListener("click", () => refreshBackups());
+bkDownloadAll.addEventListener("click", async () => {
+  setBk("Menyiapkan…");
+  try {
+    const r = await bkBridge("getAll");
+    if (!r.recs || !r.recs.length) { setBk("Belum ada cadangan.", "err"); return; }
+    const payload = r.recs.map((rec) => ({ meta: rec.meta, at: rec.at, status: rec.status, data: JSON.parse(rec.body) }));
+    downloadJson(JSON.stringify(payload, null, 2), "spdt_backup_semua_" + new Date().toISOString().slice(0, 10) + ".json");
+    setBk("Terunduh " + r.recs.length + " dokumen.", "ok");
+  } catch (e) { setBk("Gagal: " + e.message, "err"); }
+});
+
+refreshBackups();
 
 // ---- Rekap (unduh .xls + tally Clean/Error) ----
 const rkKabs = document.getElementById("rkKabs");

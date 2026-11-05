@@ -105,14 +105,6 @@
 
   <div class="row">
     <div>
-      <div class="label">Enter = pindah input</div>
-      <div class="desc">Tekan Enter untuk ke kolom berikutnya</div>
-    </div>
-    <label class="switch"><input type="checkbox" id="enterNav" /><span class="slider"></span></label>
-  </div>
-
-  <div class="row">
-    <div>
       <div class="label">Titik jadi koma</div>
       <div class="desc">Ketik "." untuk desimal "," </div>
     </div>
@@ -121,13 +113,29 @@
 
   <div class="row">
     <div>
-      <div class="label">Freeze kolom komoditas</div>
-      <div class="desc">Komoditas tetap terlihat saat scroll</div>
+      <div class="label">Penanda baris aktif</div>
+      <div class="desc">Tandai baris yang sedang diisi (kuning)</div>
     </div>
-    <label class="switch"><input type="checkbox" id="freeze" /><span class="slider"></span></label>
+    <label class="switch"><input type="checkbox" id="markerBaris" /><span class="slider"></span></label>
   </div>
 
   <div class="status" id="status">Tersimpan</div>
+
+  <div class="section">
+    <div class="sec-title">Backup draf dokumen</div>
+    <div class="desc" style="margin-bottom:8px">Salinan isian tiap dokumen tersimpan otomatis saat tombol Simpan ditekan (berhasil/gagal). Unduh ke file agar aman walau draf lokal aplikasi hilang.</div>
+
+    <table class="rk-counts" id="bkList"></table>
+
+    <div class="btn-row">
+      <button id="bkRefresh" class="btn btn-sec">↻ Muat</button>
+      <button id="bkDownloadAll" class="btn">Unduh semua (.json)</button>
+    </div>
+    <div class="btn-row">
+      <button id="bkRestore" class="btn btn-sec" disabled title="Fitur pemulihan akan ditambahkan kemudian">Pulihkan dari file (segera hadir)</button>
+    </div>
+    <div class="rk-status" id="bkStatus"></div>
+  </div>
 
   <div class="section">
     <div class="sec-title">Rekap entry selesai</div>

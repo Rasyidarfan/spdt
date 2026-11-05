@@ -1,17 +1,30 @@
-# SPDT – Freeze Kolom Komoditas
+# SPDT – Bantu Entri (Auto Save + Rekap)
 
-Ekstensi Chrome/Edge yang membuat **kolom komoditas (Kode + Jenis Barang)** pada tabel entri SPDT tetap menempel saat tabel discroll ke kanan. Berguna saat mengisi H-1 s/d H-7, Total, Jumlah Nilai, Tempat Berbelanja — komoditas tiap baris tidak lagi hilang dari layar.
+Ekstensi Chrome/Edge pembantu entri SPDT NTP: penanda baris aktif, auto-save berkala, titik jadi koma desimal, dan unduh rekap entry selesai per operator per hari.
 
 - Hanya aktif di `https://spdtntp.web.bps.go.id/*`
-- Tidak menambah tombol/UI apa pun — langsung jalan otomatis
-- **Hanya kolom komoditas** yang dibekukan (No, Satuan, dan kolom nilai tetap ikut scroll)
 - **Penanda kuning** pada baris yang sedang aktif/diisi (klik atau fokus di baris mana pun)
 - **Auto-save berkala** di halaman edit dokumen (durasi bisa diatur; menekan tombol Simpan aplikasi)
-- **Enter = pindah ke input berikutnya** (selain Tab)
 - **Titik jadi koma** — ketik `.` untuk menghasilkan desimal `,` di field angka
 - Ikon ekstensi berwarna kuning
 - **Halaman pengaturan** (klik ikon ekstensi) untuk menyalakan/mematikan tiap fitur & mengatur durasi auto-save
-- Menyesuaikan sendiri saat baris ditambah, pindah tab (Blok V/VI/VII), atau ukuran jendela berubah
+
+> Catatan: fitur **freeze kolom komoditas** dan **Enter = pindah input** telah dihapus mulai v1.8.0 karena server SPDT sudah menyediakan keduanya secara native.
+
+## Backup draf dokumen (ke file)
+
+Setiap kali tombol **Simpan** ditekan di halaman edit dokumen, ekstensi menangkap **payload lengkap dokumen** (seluruh isian Blok I–VII / K4, K5, K6, dll) — **baik penyimpanan ke server berhasil (200) maupun gagal (500)** — dan menyimpan **satu cadangan terbaru per dokumen** di storage ekstensi.
+
+Berguna saat server gagal menyimpan (mis. bug SQL pada tabel `dbo.dokumen`): seluruh isian tetap punya salinan independen yang bisa **diunduh ke file `.json`**, terpisah dari draf lokal aplikasi.
+
+Di popup bagian **Backup draf dokumen**:
+- **Daftar** dokumen yang sudah tercadang (kabupaten · NURT · nama KRT · kuesioner · waktu; baris dokumen yang sedang dibuka disorot kuning; tanda "gagal" bila status ≠ 200).
+- **⬇** unduh satu dokumen → `spdt_backup_<id>_K<kuesioner>_<waktu>.json`
+- **✕** hapus satu cadangan dari storage ekstensi.
+- **Unduh semua (.json)** → satu file berisi semua cadangan (sudah di-parse jadi objek `data`).
+- **Pulihkan dari file** — *segera hadir* (fitur restore ditambahkan kemudian).
+
+Catatan: cadangan tersimpan di storage ekstensi pada **profil browser ini**. Untuk pengamanan jangka panjang, **unduh ke file**. Cadangan menggunakan izin `unlimitedStorage` agar tidak terbatas kuota 5 MB.
 
 ## Rekap entry selesai
 
@@ -34,9 +47,8 @@ Di popup ada bagian **Rekap entry selesai**:
 Klik ikon ekstensi (kuning) di toolbar untuk membuka pengaturan:
 
 - **Auto-save** on/off + **Durasi** (detik, minimal 5)
-- **Enter = pindah input** on/off
 - **Titik jadi koma** on/off
-- **Freeze kolom komoditas** on/off
+- **Penanda baris aktif** on/off
 
 Pengaturan tersimpan otomatis dan langsung berlaku di tab SPDT yang terbuka.
 
@@ -67,9 +79,11 @@ Format ekstensi (Manifest V3) sama persis untuk Chrome dan Edge — satu folder 
 ## File
 
 - `manifest.json` – konfigurasi ekstensi
-- `content.js` – freeze kolom komoditas + penanda baris aktif
-- `entry-helpers.js` – Enter pindah input + titik jadi koma desimal
+- `content.js` – penanda baris aktif
+- `entry-helpers.js` – titik jadi koma desimal
 - `autosave.js` – auto-save dokumen berkala (durasi dari pengaturan)
+- `backup-hook.js` – tangkap payload PUT dokumen (MAIN world)
+- `backup.js` – simpan & kelola cadangan draf dokumen (content script)
 - `rekap.js` – hitung & bangun/unduh rekap .xls (popup)
 - `rekap-bridge.js` – ambil data di tab SPDT atas permintaan popup (content script)
 - `popup.html` / `popup.js` – halaman pengaturan + tombol rekap

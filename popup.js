@@ -4,9 +4,10 @@ const DEFAULTS = {
   autosaveSeconds: 100,
   commaDecimal: true,
   markerBaris: true,
+  filterStatus: true,
 };
 
-const BOOL_KEYS = ["autosaveEnabled", "commaDecimal", "markerBaris"];
+const BOOL_KEYS = ["autosaveEnabled", "commaDecimal", "markerBaris", "filterStatus"];
 const statusEl = document.getElementById("status");
 let statusTimer = null;
 

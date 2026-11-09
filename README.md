@@ -26,6 +26,19 @@ Di popup bagian **Backup draf dokumen**:
 
 Catatan: cadangan tersimpan di storage ekstensi pada **profil browser ini**. Untuk pengamanan jangka panjang, **unduh ke file**. Cadangan menggunakan izin `unlimitedStorage` agar tidak terbatas kuota 5 MB.
 
+## Filter status & operator + kolom Operator (halaman Entri Data)
+
+Di halaman `/sample`, kartu **Pencarian** mendapat panel **Filter Tambahan**. Semua perubahan diterapkan langsung pada **tabel Daftar Sampel asli**: paginasi, tombol bawaan (edit, dll), dan kotak Cari tetap berfungsi seperti biasa.
+
+- **Status Dokumen**: Semua / Clean / Error / Belum (Clean = `flag_error "C"`, Error = `"E"`, Belum = belum ada dokumen).
+- **Operator**: user kabupaten terpilih. Sampel cocok bila operator itu `user_created` **atau** `user_modified` dokumennya. Setelah filter aktif, daftar diurutkan berdasarkan jumlah dokumen, mis. "Wanda (11)". Kedua filter bisa digabung.
+- **Kolom Operator** (sebelum kolom tombol): nama `user_created` dan `user_modified` dokumen. Kalau sama, cukup satu nama; kalau berbeda, dua baris (entri / ubah). Sampel tanpa dokumen bertanda "–". Nama diambil dari `/api/user?full_code=<kab>`.
+- Badge jumlah **Clean · Error · Belum** (mengikuti filter operator) dan tombol **↻ Muat ulang data**.
+- Pilihan filter bertahan selama tab terbuka. Filter operator di-reset saat kabupaten diganti.
+- Bisa dimatikan dari popup (**Filter & kolom operator**).
+
+Cara kerja: server tidak punya filter status/operator, jadi `sample-filter-hook.js` (MAIN world) mencegat permintaan tabel `GET /api/sample`. Saat filter aktif, hook mengambil semua sampel (500/permintaan, cache 2 menit), menyaringnya, lalu mengembalikan halaman yang diminta dengan `meta.total` yang disesuaikan. Hook juga mengirim `user_created`/`user_modified` tiap baris ke `sample-filter.js` untuk mengisi kolom Operator. Untuk memaksa tabel memuat ulang (aplikasi meng-cache hasil per kata Cari), `sample-filter.js` menambahkan penanda tak terlihat (karakter zero-width) di kotak Cari. Hook membuangnya dari URL, jadi pencarian ke server tidak berubah.
+
 ## Rekap entry selesai
 
 Di popup ada bagian **Rekap entry selesai**:
@@ -57,7 +70,7 @@ Pengaturan tersimpan otomatis dan langsung berlaku di tab SPDT yang terbuka.
 - Hanya aktif di halaman `.../dokumen/<id>/edit`.
 - Setiap 100 detik menekan tombol **Simpan** (ikon floppy) milik aplikasi — jadi yang tersimpan adalah data terbaru dengan token CSRF segar, bukan request yang diulang.
 - Dilewati bila ada dialog/modal terbuka.
-- Interval bisa diubah di `autosave.js` pada baris `INTERVAL_MS`.
+- Interval diatur dari popup (default 100 detik, minimal 5).
 
 ## Cara pasang (Chrome)
 

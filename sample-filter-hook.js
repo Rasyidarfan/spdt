@@ -14,10 +14,6 @@
  *   "spdtSF"   = status C | E | B   (kosong = semua)
  *   "spdtSFop" = id user operator   (kosong = semua)
  * Filter tidak aktif → permintaan diteruskan ke server tanpa perubahan.
- *
- * Untuk SETIAP respons tabel (disaring maupun asli) hook mengirim
- * {__spdtSFRows} berisi user_created/user_modified per baris, dipakai
- * sample-filter.js untuk mengisi kolom "Operator".
  */
 (function () {
   "use strict";
@@ -81,22 +77,6 @@
 
   function post(msg) { window.postMessage(msg, location.origin); }
 
-  function postRows(url, data, all) {
-    try {
-      var q = new URL(url, location.origin).searchParams;
-      var kd = q.get("kd_kuesioner") || "";
-      post({
-        __spdtSFRows: true,
-        all: !!all,
-        fc: q.get("full_code") || "",
-        rows: (data || []).map(function (s) {
-          var d = docOf(s, kd);
-          return { id: s.id_sample, nama: s.nama_krt, alamat: s.alamat, uc: d ? d.user_created : null, um: d ? d.user_modified : null };
-        }),
-      });
-    } catch (e) {}
-  }
-
   function def(o, k, v) { Object.defineProperty(o, k, { configurable: true, get: function () { return v; } }); }
 
   function respond(xhr, text) {
@@ -147,8 +127,6 @@
         },
         last_run_time: all.last_run_time,
       }));
-      postRows(xhr.__sfu, all.list, true); // peta lengkap untuk halaman yang di-cache aplikasi
-      postRows(xhr.__sfu, data);
       post({ __spdtSFInfo: true, counts: counts, ops: ops, total: total, st: f.st, op: f.op });
     } catch (e) {
       post({ __spdtSFInfo: true, error: (e && e.message) || String(e) });
@@ -175,12 +153,6 @@
       if (/^https?:/.test(this.__sfu)) this.__sfu = this.__sfu.replace(location.origin, "");
       var f = filters();
       if (f.st || f.op) { serve(this, f, arguments); return; }
-      // tanpa filter: teruskan ke server, tapi kirim info operator per baris ke panel
-      var self = this;
-      this.addEventListener("loadend", function () {
-        if (self.status !== 200) return;
-        try { postRows(self.__sfu, JSON.parse(self.responseText).data); } catch (e) {}
-      });
     }
     return SEND.apply(this, arguments);
   };

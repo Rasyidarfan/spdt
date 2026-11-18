@@ -26,18 +26,21 @@ Di popup bagian **Backup draf dokumen**:
 
 Catatan: cadangan tersimpan di storage ekstensi pada **profil browser ini**. Untuk pengamanan jangka panjang, **unduh ke file**. Cadangan menggunakan izin `unlimitedStorage` agar tidak terbatas kuota 5 MB.
 
-## Filter status & operator + kolom Operator (halaman Entri Data)
+## Kunci navigasi blok (form isian dokumen)
+
+Di form isian (`/dokumen/<id>/edit`), terutama Blok IV dan V yang barisnya banyak, sebelumnya ada 3 scroll vertikal bertumpuk: halaman, kartu tengah, dan tabel. Kartu tengah ikut ter-scroll sehingga tab Blok, judul blok, dan judul kolom hilang ke atas. `fit-blok.js` menyetel tinggi maksimum area tabel agar pas dengan sisa ruang di kartu, jadi hanya tabel yang ter-scroll (judul kolom tetap menempel di atas). Tinggi dihitung ulang saat ganti tab, tambah baris, atau ukuran jendela berubah. Bisa dimatikan dari popup (**Kunci navigasi blok**).
+
+## Filter status & operator (halaman Entri Data)
 
 Di halaman `/sample`, kartu **Pencarian** mendapat panel **Filter Tambahan**. Semua perubahan diterapkan langsung pada **tabel Daftar Sampel asli**: paginasi, tombol bawaan (edit, dll), dan kotak Cari tetap berfungsi seperti biasa.
 
 - **Status Dokumen**: Semua / Clean / Error / Belum (Clean = `flag_error "C"`, Error = `"E"`, Belum = belum ada dokumen).
 - **Operator**: user kabupaten terpilih. Sampel cocok bila operator itu `user_created` **atau** `user_modified` dokumennya. Setelah filter aktif, daftar diurutkan berdasarkan jumlah dokumen, mis. "Wanda (11)". Kedua filter bisa digabung.
-- **Kolom Operator** (sebelum kolom tombol): nama `user_created` dan `user_modified` dokumen. Kalau sama, cukup satu nama; kalau berbeda, dua baris (entri / ubah). Sampel tanpa dokumen bertanda "–". Nama diambil dari `/api/user?full_code=<kab>`.
 - Badge jumlah **Clean · Error · Belum** (mengikuti filter operator) dan tombol **↻ Muat ulang data**.
 - Pilihan filter bertahan selama tab terbuka. Filter operator di-reset saat kabupaten diganti.
-- Bisa dimatikan dari popup (**Filter & kolom operator**).
+- Bisa dimatikan dari popup (**Filter status & operator**).
 
-Cara kerja: server tidak punya filter status/operator, jadi `sample-filter-hook.js` (MAIN world) mencegat permintaan tabel `GET /api/sample`. Saat filter aktif, hook mengambil semua sampel (500/permintaan, cache 2 menit), menyaringnya, lalu mengembalikan halaman yang diminta dengan `meta.total` yang disesuaikan. Hook juga mengirim `user_created`/`user_modified` tiap baris ke `sample-filter.js` untuk mengisi kolom Operator. Untuk memaksa tabel memuat ulang (aplikasi meng-cache hasil per kata Cari), `sample-filter.js` menambahkan penanda tak terlihat (karakter zero-width) di kotak Cari. Hook membuangnya dari URL, jadi pencarian ke server tidak berubah.
+Cara kerja: server tidak punya filter status/operator, jadi `sample-filter-hook.js` (MAIN world) mencegat permintaan tabel `GET /api/sample`. Saat filter aktif, hook mengambil semua sampel (500/permintaan, cache 2 menit), menyaringnya, lalu mengembalikan halaman yang diminta dengan `meta.total` yang disesuaikan. Untuk memaksa tabel memuat ulang (aplikasi meng-cache hasil per kata Cari), `sample-filter.js` menambahkan penanda tak terlihat (karakter zero-width) di kotak Cari. Hook membuangnya dari URL, jadi pencarian ke server tidak berubah.
 
 ## Rekap entry selesai
 
@@ -61,7 +64,7 @@ Klik ikon ekstensi (kuning) di toolbar untuk membuka pengaturan:
 
 - **Auto-save** on/off + **Durasi** (detik, minimal 5)
 - **Titik jadi koma** on/off
-- **Penanda baris aktif** on/off
+- **Penanda baris & kolom aktif** on/off (kolom aktif hanya di Blok V: judul kolom H-x / Jumlah-Nilai / nomor kolom jadi kuning, sel kolom diberi warna tipis)
 
 Pengaturan tersimpan otomatis dan langsung berlaku di tab SPDT yang terbuka.
 
@@ -92,7 +95,7 @@ Format ekstensi (Manifest V3) sama persis untuk Chrome dan Edge — satu folder 
 ## File
 
 - `manifest.json` – konfigurasi ekstensi
-- `content.js` – penanda baris aktif
+- `content.js` – penanda baris aktif + kolom aktif (Blok V)
 - `entry-helpers.js` – titik jadi koma desimal
 - `autosave.js` – auto-save dokumen berkala (durasi dari pengaturan)
 - `backup-hook.js` – tangkap payload PUT dokumen (MAIN world)

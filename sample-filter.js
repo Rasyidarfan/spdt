@@ -1,12 +1,10 @@
 /*
- * SPDT - Filter Status Dokumen & Operator + kolom Operator (content script, halaman /sample)
+ * SPDT - Filter Status Dokumen & Operator (content script, halaman /sample)
  * -----------------------------------------------------------
  * - Panel di kartu Pencarian: dropdown Status Dokumen & Operator. Pilihan disimpan
  *   di sessionStorage ("spdtSF", "spdtSFop") dan dibaca sample-filter-hook.js,
  *   yang menyaring data TABEL ASLI. Panel memicu tabel memuat ulang & menampilkan jumlah.
- * - Kolom "Operator" disisipkan di tabel asli (sebelum kolom tombol): nama
- *   user_created & user_modified dokumen; bila sama cukup satu nama.
- *   Nama diambil dari /api/user?full_code=<kab>.
+ * - Nama operator diambil dari /api/user?full_code=<kab>.
  */
 (function () {
   "use strict";
@@ -15,8 +13,6 @@
   var enabled = true;
   var panel = null;
   var info = null;        // {counts, ops, total, st, op} | {error}
-  var pageRows = null;    // [{id, nama, alamat, uc, um}] untuk baris tabel saat ini
-  var byKey = {};         // "nama|alamat" -> {uc, um} | "dup" — cadangan saat aplikasi memakai cache halaman
   var users = {};         // kab -> Promise<{id: nama}>
   var names = {};         // id -> nama (gabungan semua kab yang dimuat)
   var curKab = "";
@@ -98,8 +94,7 @@
     "#spdt-sf .cnt span{padding:2px 8px;border-radius:999px;font-weight:700;font-size:11px}" +
     "#spdt-sf .C{background:#16a34a;color:#fff}#spdt-sf .E{background:#dc2626;color:#fff}#spdt-sf .B{background:#3f3f46;color:#e4e4e7}" +
     "#spdt-sf .m{font-size:11px;color:#a1a1aa}#spdt-sf .err{color:#f87171}" +
-    "#spdt-sf .rf{cursor:pointer;background:none;border:0;color:#facc15;font-size:12px;text-align:left;padding:0}" +
-    ".spdt-op{font-size:12px;line-height:1.35;white-space:nowrap}.spdt-op small{display:block;color:#a1a1aa;font-size:10px}";
+    "#spdt-sf .rf{cursor:pointer;background:none;border:0;color:#facc15;font-size:12px;text-align:left;padding:0}";
 
   function ensureUi() {
     var card = Array.prototype.slice.call(document.querySelectorAll(".card"))
@@ -188,94 +183,17 @@
     }
   }
 
-  // ---------- kolom Operator di tabel asli ----------
-  function nativeTable() {
-    return Array.prototype.slice.call(document.querySelectorAll("table"))
-      .find(function (t) { return /Nama KRT/.test(t.tHead ? t.tHead.textContent : ""); });
-  }
-
-  function key(nama, alamat) {
-    return (String(nama || "").trim() + "|" + String(alamat || "").trim()).toUpperCase().replace(/\s+/g, " ");
-  }
-  function remember(rows) {
-    (rows || []).forEach(function (r) {
-      var k = key(r.nama, r.alamat), v = { uc: r.uc, um: r.um };
-      var prev = byKey[k];
-      if (prev && prev !== "dup" && (String(prev.uc) !== String(v.uc) || String(prev.um) !== String(v.um))) byKey[k] = "dup";
-      else if (!prev) byKey[k] = v;
-    });
-  }
-
-  function opCellHtml(r) {
-    if (!r || (r.uc == null && r.um == null)) return '<span style="color:#71717a">–</span>';
-    if (r.uc == null || r.um == null || String(r.uc) === String(r.um)) return esc(nameOf(r.uc != null ? r.uc : r.um));
-    return esc(nameOf(r.uc)) + "<small>entri</small>" + esc(nameOf(r.um)) + "<small>ubah</small>";
-  }
-
-  var applying = false;
-  function applyColumn() {
-    if (!enabled || !onSamplePage()) return;
-    var t = nativeTable();
-    if (!t) return;
-    applying = true;
-    try {
-      var hr = t.tHead && t.tHead.rows[0];
-      if (hr && !hr.querySelector(".spdt-op-h")) {
-        var last = hr.cells[hr.cells.length - 1];
-        var th = last.cloneNode(false);
-        th.classList.add("spdt-op-h");
-        th.innerHTML = '<div class="p-datatable-column-header-content"><span class="p-datatable-column-title">Operator</span></div>';
-        hr.insertBefore(th, last);
-      }
-      var trs = Array.prototype.slice.call(t.tBodies[0] ? t.tBodies[0].rows : []);
-      var dataRows = trs.filter(function (tr) { return tr.cells.length > 2; });
-      var ok = pageRows && pageRows.length === dataRows.length;
-      var heads = hr ? Array.prototype.map.call(hr.cells, function (c) { return c.textContent.trim(); }) : [];
-      var iNama = heads.indexOf("Nama KRT"), iAlamat = heads.indexOf("Alamat");
-      dataRows.forEach(function (tr, i) {
-        var td = tr.querySelector("td.spdt-op");
-        if (!td) {
-          var lastTd = tr.cells[tr.cells.length - 1];
-          td = lastTd.cloneNode(false);
-          td.classList.add("spdt-op");
-          tr.insertBefore(td, lastTd);
-        }
-        var r = ok ? pageRows[i] : null;
-        // cocokkan juga nama KRT, supaya tidak salah baris saat tabel sedang berganti
-        if (r && r.nama && tr.textContent.indexOf(r.nama) === -1) r = null;
-        if (!r && iNama >= 0 && iAlamat >= 0 && tr.cells[iNama] && tr.cells[iAlamat]) {
-          var hit = byKey[key(tr.cells[iNama].textContent, tr.cells[iAlamat].textContent)];
-          if (hit && hit !== "dup") r = hit;
-        }
-        var html = r ? opCellHtml(r) : "";
-        if (td.getAttribute("data-h") !== html) { td.innerHTML = html; td.setAttribute("data-h", html); }
-      });
-      // baris "tidak ada data" (satu sel colspan) → lebarkan
-      trs.forEach(function (tr) {
-        if (tr.cells.length === 1 && tr.cells[0].colSpan > 1 && hr && tr.cells[0].colSpan < hr.cells.length) tr.cells[0].colSpan = hr.cells.length;
-      });
-    } finally { applying = false; }
-  }
-
   window.addEventListener("message", function (ev) {
     if (ev.source !== window || !ev.data) return;
     if (ev.data.__spdtSFInfo) {
       info = ev.data;
       render();
       fillOperators();
-    } else if (ev.data.__spdtSFRows) {
-      remember(ev.data.rows);
-      if (ev.data.all) { applyColumn(); return; } // seluruh sampel (dari hook), hanya untuk peta cadangan
-      pageRows = ev.data.rows || [];
-      var kab = (ev.data.fc || "").slice(0, 4) || currentKab();
-      loadUsers(kab).then(function () { applyColumn(); fillOperators(); }).catch(function () { applyColumn(); });
-      setTimeout(applyColumn, 50);
     }
   });
 
   function teardown() {
     if (panel) { panel.remove(); panel = null; }
-    document.querySelectorAll(".spdt-op, .spdt-op-h").forEach(function (e) { e.remove(); });
   }
 
   function tick() {
@@ -291,12 +209,10 @@
       curKab = kab;
       fillOperators();
     }
-    applyColumn();
   }
 
   var t = null;
   new MutationObserver(function () {
-    if (applying) return;
     clearTimeout(t); t = setTimeout(tick, 120);
   }).observe(document.documentElement, { childList: true, subtree: true });
 

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SPDT - Bantu Entri (Auto Save + Backup + Rekap)",
-  "version": "1.12.0",
+  "version": "1.14.0",
   "description": "Penanda baris aktif, auto-save berkala, titik jadi koma desimal, backup draf dokumen ke file, dan unduh rekap entry selesai per operator per hari.",
   "permissions": ["storage", "unlimitedStorage"],
   "host_permissions": ["https://spdtntp.web.bps.go.id/*"],
@@ -31,7 +31,7 @@
     },
     {
       "matches": ["https://spdtntp.web.bps.go.id/*"],
-      "js": ["content.js", "entry-helpers.js", "autosave.js", "rekap-bridge.js", "backup.js", "sample-filter.js"],
+      "js": ["content.js", "entry-helpers.js", "autosave.js", "rekap-bridge.js", "backup.js", "sample-filter.js", "fit-blok.js"],
       "run_at": "document_idle",
       "all_frames": false
     }

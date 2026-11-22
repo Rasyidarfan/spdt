@@ -7,9 +7,10 @@ const DEFAULTS = {
   filterStatus: true,
   fitBlok: true,
   placeholderKolom: true,
+  fuzzyKomoditas: true,
 };
 
-const BOOL_KEYS = ["autosaveEnabled", "commaDecimal", "markerBaris", "filterStatus", "fitBlok", "placeholderKolom"];
+const BOOL_KEYS = ["autosaveEnabled", "commaDecimal", "markerBaris", "filterStatus", "fitBlok", "placeholderKolom", "fuzzyKomoditas"];
 const statusEl = document.getElementById("status");
 let statusTimer = null;
 

@@ -34,6 +34,17 @@ Di form isian (`/dokumen/<id>/edit`), terutama Blok IV dan V yang barisnya banya
 
 `placeholder-kolom.js` memberi placeholder pada setiap text input yang masih kosong di tabel isian, sesuai judul kolomnya, misalnya `H-1 Jumlah`, `H-3 Nilai (Rp)`, `Sebulan Jumlah`, atau `Umur (Tahun)`. Judul diambil dari header bertingkat (grup + sub-judul). Baris nomor kolom, judul grup berupa instruksi panjang, dan keterangan dalam kurung di judul grup tidak ikut. Judul yang panjang diawali nomor kolom, misalnya `(10) Jika Kol (8) …`, dan judul lengkapnya muncul sebagai tooltip. Placeholder otomatis hilang begitu sel diisi. Bisa dimatikan dari popup (**Placeholder judul kolom**).
 
+## Fuzzy search komoditas (form isian dokumen)
+
+Dropdown **Jenis Barang** di Blok V dan VI aslinya hanya mencari dengan cara "mengandung teks" (`contains`). `fuzzy-komoditas-hook.js` (MAIN world) mengganti computed `visibleOptions` pada setiap instance PrimeVue `Select` yang punya kotak cari dan minimal 30 opsi, sehingga pencariannya jadi fuzzy. Tidak ada komponen baru: kotak cari, daftar, navigasi keyboard, dan pemilihan tetap milik dropdown aslinya.
+
+- Semua kata kunci harus cocok, urutannya bebas. Kata kunci dicocokkan ke label dan kode, misalnya `bwg ptih`, `putih bawang`, `tlur ayam`, `minyk goreng`, `clna pnjg`, atau `0117052`.
+- Urutan kecocokan: substring (awal teks > awal kata > tengah kata), lalu salah ketik 1 huruf (kata ≥ 4 huruf) atau 2 huruf (kata ≥ 7 huruf), lalu huruf berurutan. Kode angka hanya dicocokkan sebagai substring.
+- Hasil diurutkan dari yang paling cocok.
+- Script ini juga memperbaiki bug bawaan: daftar hasil tampak kosong bila opsi yang sedang terpilih ada jauh di bawah (posisi virtual scroller tidak di-reset). Label baris juga tidak lagi kosong setelah dropdown ditutup dengan teks cari yang masih tertinggal.
+
+Bisa dimatikan dari popup (**Fuzzy search komoditas**). Toggle diteruskan oleh `fuzzy-komoditas.js` lewat atribut `<html data-spdt-fuzzy>`.
+
 ## Filter status & operator (halaman Entri Data)
 
 Di halaman `/sample`, kartu **Pencarian** mendapat panel **Filter Tambahan**. Semua perubahan diterapkan langsung pada **tabel Daftar Sampel asli**: paginasi, tombol bawaan (edit, dll), dan kotak Cari tetap berfungsi seperti biasa.

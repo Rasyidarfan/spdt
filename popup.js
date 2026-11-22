@@ -6,9 +6,10 @@ const DEFAULTS = {
   markerBaris: true,
   filterStatus: true,
   fitBlok: true,
+  placeholderKolom: true,
 };
 
-const BOOL_KEYS = ["autosaveEnabled", "commaDecimal", "markerBaris", "filterStatus", "fitBlok"];
+const BOOL_KEYS = ["autosaveEnabled", "commaDecimal", "markerBaris", "filterStatus", "fitBlok", "placeholderKolom"];
 const statusEl = document.getElementById("status");
 let statusTimer = null;
 

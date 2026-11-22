@@ -30,6 +30,10 @@ Catatan: cadangan tersimpan di storage ekstensi pada **profil browser ini**. Unt
 
 Di form isian (`/dokumen/<id>/edit`), terutama Blok IV dan V yang barisnya banyak, sebelumnya ada 3 scroll vertikal bertumpuk: halaman, kartu tengah, dan tabel. Kartu tengah ikut ter-scroll sehingga tab Blok, judul blok, dan judul kolom hilang ke atas. `fit-blok.js` menyetel tinggi maksimum area tabel agar pas dengan sisa ruang di kartu, jadi hanya tabel yang ter-scroll (judul kolom tetap menempel di atas). Tinggi dihitung ulang saat ganti tab, tambah baris, atau ukuran jendela berubah. Bisa dimatikan dari popup (**Kunci navigasi blok**).
 
+## Placeholder judul kolom (form isian dokumen)
+
+`placeholder-kolom.js` memberi placeholder pada setiap text input yang masih kosong di tabel isian, sesuai judul kolomnya, misalnya `H-1 Jumlah`, `H-3 Nilai (Rp)`, `Sebulan Jumlah`, atau `Umur (Tahun)`. Judul diambil dari header bertingkat (grup + sub-judul). Baris nomor kolom, judul grup berupa instruksi panjang, dan keterangan dalam kurung di judul grup tidak ikut. Judul yang panjang diawali nomor kolom, misalnya `(10) Jika Kol (8) …`, dan judul lengkapnya muncul sebagai tooltip. Placeholder otomatis hilang begitu sel diisi. Bisa dimatikan dari popup (**Placeholder judul kolom**).
+
 ## Filter status & operator (halaman Entri Data)
 
 Di halaman `/sample`, kartu **Pencarian** mendapat panel **Filter Tambahan**. Semua perubahan diterapkan langsung pada **tabel Daftar Sampel asli**: paginasi, tombol bawaan (edit, dll), dan kotak Cari tetap berfungsi seperti biasa.

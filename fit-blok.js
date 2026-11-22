@@ -42,15 +42,20 @@
         if (inner.hasAttribute("data-spdt-fit")) { inner.style.maxHeight = ""; inner.removeAttribute("data-spdt-fit"); }
         return;
       }
-      var prev = inner.style.maxHeight;
-      inner.style.maxHeight = "";
+      // JANGAN kosongkan max-height dulu untuk mengukur: area tabel sesaat jadi
+      // tidak ter-scroll, browser me-reset scrollTop ke 0, dan tabel melompat ke
+      // atas setiap ada mutasi DOM (buka dropdown, ketik, dll). Rumus di bawah
+      // tetap benar dengan max-height yang sedang berlaku karena "tail" adalah
+      // isi di bawah tabel, tidak bergantung pada tinggi tabel itu sendiri.
       var mr = mid.getBoundingClientRect(), ir = inner.getBoundingClientRect();
       var topIn = ir.top - mr.top + mid.scrollTop;               // posisi tabel di dalam kartu tengah
       var tail = mid.scrollHeight - (topIn + inner.offsetHeight); // isi di bawah tabel (tombol Tambah, padding)
       var mh = Math.max(MIN_H, Math.floor(mid.clientHeight - topIn - tail)) + "px";
+      if (inner.style.maxHeight === mh && inner.hasAttribute("data-spdt-fit")) return; // tidak berubah: jangan sentuh
+      var st = inner.scrollTop;
       inner.style.maxHeight = mh;
       inner.setAttribute("data-spdt-fit", "1");
-      if (prev !== mh && mid.scrollHeight <= mid.clientHeight + 1) mid.scrollTop = 0;
+      if (inner.scrollTop !== st) inner.scrollTop = st;           // pertahankan posisi scroll tabel
     });
   }
 

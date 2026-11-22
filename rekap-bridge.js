@@ -65,6 +65,25 @@
     return { recs: recs, userMap: userMap, kabName: kabName };
   }
 
+  // Rekap sederhana: progres petugas entri dari /api/tabulasi-progres (per kabupaten).
+  async function loadSimple(codes) {
+    var rows = [];
+    for (var i = 0; i < codes.length; i++) {
+      var code = codes[i];
+      (await pages((function (code) {
+        return function (p) { return BASE + "/api/tabulasi-progres?page=" + p + "&table=petugas_entri&full_code=" + code + "&per_page=100"; };
+      })(code))).forEach(function (r) {
+        rows.push({
+          code: code, nama_kab: r.nama_kab || "", nama: r.nama || "",
+          produksi: parseInt(r.produksi, 10) || 0,
+          konsumsi: parseInt(r.konsumsi, 10) || 0,
+          total: parseInt(r.total, 10) || 0,
+        });
+      });
+    }
+    return rows;
+  }
+
   async function defaultKabs() {
     try {
       var r = await fetch(BASE + "/petugas", { headers: { accept: "text/html" }, credentials: "include" });
@@ -87,6 +106,7 @@
     (async function () {
       try {
         if (msg.cmd === "default") sendResponse({ ok: true, data: await defaultKabs() });
+        else if (msg.cmd === "simple") sendResponse({ ok: true, data: await loadSimple(msg.codes) });
         else if (msg.cmd === "load") sendResponse({ ok: true, data: await load(msg.codes, msg.kd) });
         else sendResponse({ ok: false, error: "Perintah tidak dikenal." });
       } catch (e) {

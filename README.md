@@ -42,15 +42,19 @@ Di halaman `/sample`, kartu **Pencarian** mendapat panel **Filter Tambahan**. Se
 
 Cara kerja: server tidak punya filter status/operator, jadi `sample-filter-hook.js` (MAIN world) mencegat permintaan tabel `GET /api/sample`. Saat filter aktif, hook mengambil semua sampel (500/permintaan, cache 2 menit), menyaringnya, lalu mengembalikan halaman yang diminta dengan `meta.total` yang disesuaikan. Untuk memaksa tabel memuat ulang (aplikasi meng-cache hasil per kata Cari), `sample-filter.js` menambahkan penanda tak terlihat (karakter zero-width) di kotak Cari. Hook membuangnya dari URL, jadi pencarian ke server tidak berubah.
 
-## Rekap entry selesai
+## Rekap entry
 
-Di popup ada bagian **Rekap entry selesai**:
+Di popup ada bagian **Rekap entry** dengan dua tombol. Data **hanya diambil saat tombol diklik** (tidak dimuat otomatis saat popup dibuka).
+
+### Rekap sederhana
+Klik **Rekap sederhana** → `rekap_sederhana_YYYYMMDD.xls`, 1 sheet **Petugas Entri**: jumlah entri per petugas (Produksi / Konsumsi / Total) per kabupaten, plus subtotal per kabupaten dan TOTAL. Sumber: `/api/tabulasi-progres?table=petugas_entri` (sama dengan menu Tabulasi → Progres). Hanya memakai isian Kabupaten.
+
+### Rekap lengkap
 
 - **Kabupaten**: isi kode kabupaten dipisah koma, mis. `9702, 9705, 9706`. **Tersimpan di memori browser**; bila belum ada, default diambil dari `/petugas`.
 - **Kuesioner**: kode kuesioner (default `08`), tersimpan.
 - **Subsektor**: kosong = semua subsektor; isi `1` untuk Tanaman Pangan (TP) — ini yang cocok dengan tampilan "Daftar Sampel" di UI.
-- **Tabel Clean / Error / Belum** per kabupaten tampil otomatis; tombol **↻ Refresh** untuk memperbarui.
-- Klik **Unduh .xls** → `rekap_entry_selesai_YYYYMMDD.xls`, 3 sheet:
+- Klik **Rekap lengkap** → `rekap_entry_selesai_YYYYMMDD.xls`, 3 sheet:
   1. **Pivot Harian** — operator × tanggal (sampel selesai) + Total Selesai, Error
   2. **Ringkasan Kabupaten** — Total Sampel / Clean / Error / Belum per kabupaten
   3. **Detail** — satu baris per **sampel** (status, subsektor, operator, tanggal, NURT, Nama KRT, alamat)

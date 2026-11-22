@@ -154,19 +154,17 @@
   </div>
 
   <div class="section">
-    <div class="sec-title">Rekap entry selesai</div>
-    <div class="desc" style="margin-bottom:8px">Jumlah entry per operator per hari (.xls)</div>
+    <div class="sec-title">Rekap entry</div>
+    <div class="desc" style="margin-bottom:8px"><b>Sederhana</b>: jumlah entri per petugas (produksi/konsumsi/total). <b>Lengkap</b>: per operator per hari + ringkasan + detail sampel.</div>
 
     <div class="field"><span>Kabupaten</span><input type="text" id="rkKabs" placeholder="9702, 9705, 9706" /></div>
     <div class="field"><span>Kuesioner</span><input type="text" id="rkKd" value="08" /></div>
     <div class="field"><span>Subsektor</span><input type="text" id="rkSub" placeholder="kosong = semua" /></div>
-    <div class="desc" style="margin:-2px 0 8px">Kode kabupaten dipisah koma. Subsektor kosong = semua (1=TP). Tersimpan otomatis.</div>
-
-    <table class="rk-counts" id="rkCounts"></table>
+    <div class="desc" style="margin:-2px 0 8px">Kode kabupaten dipisah koma. Kuesioner &amp; subsektor hanya untuk rekap lengkap (subsektor kosong = semua, 1=TP). Tersimpan otomatis.</div>
 
     <div class="btn-row">
-      <button id="rkRefresh" class="btn btn-sec">↻ Refresh</button>
-      <button id="rkDownload" class="btn">Unduh .xls</button>
+      <button id="rkSimple" class="btn">Rekap sederhana</button>
+      <button id="rkDownload" class="btn btn-sec">Rekap lengkap</button>
     </div>
     <div class="rk-status" id="rkStatus"></div>
   </div>

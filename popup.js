@@ -145,14 +145,13 @@ bkDownloadAll.addEventListener("click", async () => {
 
 refreshBackups();
 
-// ---- Rekap (unduh .xls + tally Clean/Error) ----
+// ---- Rekap sederhana & lengkap (data diambil hanya saat tombol diklik) ----
 const rkKabs = document.getElementById("rkKabs");
 const rkKd = document.getElementById("rkKd");
 const rkSub = document.getElementById("rkSub");
 const rkBtn = document.getElementById("rkDownload");
-const rkRefresh = document.getElementById("rkRefresh");
+const rkSimple = document.getElementById("rkSimple");
 const rkStatus = document.getElementById("rkStatus");
-const rkCounts = document.getElementById("rkCounts");
 
 function setRk(msg, cls) {
   rkStatus.textContent = msg || "";
@@ -161,56 +160,31 @@ function setRk(msg, cls) {
 
 function currentCodes() { return window.SPDTRekap.parseCodes(rkKabs.value); }
 
-function renderCounts(rows) {
-  if (!rows || !rows.length) { rkCounts.innerHTML = ""; return; }
-  let tc = 0, te = 0, tb = 0;
-  const body = rows.map((r) => {
-    tc += r.clean; te += r.error; tb += r.belum;
-    return `<tr><td>${r.nama || r.code}</td><td class="c-clean">${r.clean}</td>` +
-      `<td class="c-err">${r.error}</td><td>${r.belum}</td></tr>`;
-  }).join("");
-  rkCounts.innerHTML =
-    `<thead><tr><th>Kabupaten</th><th>Clean</th><th>Error</th><th>Belum</th></tr></thead>` +
-    `<tbody>${body}</tbody>` +
-    `<tfoot><tr><td>TOTAL</td><td class="c-clean">${tc}</td><td class="c-err">${te}</td><td>${tb}</td></tr></tfoot>`;
-}
-
-async function refreshCounts() {
+async function runRekap(job) {
   const codes = currentCodes();
   if (!codes.length) { setRk("Isi kode kabupaten dulu.", "err"); return; }
-  const kd = (rkKd.value || "08").trim();
-  const sub = (rkSub.value || "").trim();
-  rkRefresh.disabled = true; rkBtn.disabled = true;
-  setRk("Mengambil data…");
-  try {
-    const rows = await window.SPDTRekap.tally(codes, kd, sub);
-    renderCounts(rows);
-    setRk("Diperbarui.", "ok");
-  } catch (e) {
-    setRk("Gagal: " + (e && e.message ? e.message : e), "err");
-  } finally {
-    rkRefresh.disabled = false; rkBtn.disabled = false;
-  }
-}
-
-rkRefresh.addEventListener("click", refreshCounts);
-
-rkBtn.addEventListener("click", async () => {
-  const codes = currentCodes();
-  if (!codes.length) { setRk("Isi kode kabupaten dulu.", "err"); return; }
-  const kd = (rkKd.value || "08").trim();
-  const sub = (rkSub.value || "").trim();
-  rkBtn.disabled = true; rkRefresh.disabled = true;
+  rkBtn.disabled = true; rkSimple.disabled = true;
   setRk("Menyiapkan unduhan…");
   try {
-    const res = await window.SPDTRekap.generate(codes, kd, sub);
-    setRk(`Terunduh · ${res.selesai} selesai / ${res.total} sampel`, "ok");
+    setRk(await job(codes), "ok");
   } catch (e) {
     setRk("Gagal: " + (e && e.message ? e.message : e), "err");
   } finally {
-    rkBtn.disabled = false; rkRefresh.disabled = false;
+    rkBtn.disabled = false; rkSimple.disabled = false;
   }
-});
+}
+
+rkSimple.addEventListener("click", () => runRekap(async (codes) => {
+  const res = await window.SPDTRekap.generateSimple(codes);
+  return `Terunduh · ${res.petugas} petugas · ${res.total} entri`;
+}));
+
+rkBtn.addEventListener("click", () => runRekap(async (codes) => {
+  const kd = (rkKd.value || "08").trim();
+  const sub = (rkSub.value || "").trim();
+  const res = await window.SPDTRekap.generate(codes, kd, sub);
+  return `Terunduh · ${res.selesai} selesai / ${res.total} sampel`;
+}));
 
 // simpan kabupaten & kuesioner di memori browser
 rkKabs.addEventListener("change", () => chrome.storage.local.set({ rekapKabs: rkKabs.value }));
@@ -230,5 +204,4 @@ rkSub.addEventListener("change", () => chrome.storage.local.set({ rekapSub: rkSu
     chrome.storage.local.set({ rekapKabs: rkKabs.value });
     setRk("");
   }
-  refreshCounts(); // tampilkan Clean/Error awal
 })();

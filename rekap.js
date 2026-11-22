@@ -53,20 +53,6 @@ window.SPDTRekap = (function () {
     return recs.filter(function (r) { return r.kd_subsektor === sub; });
   }
 
-  async function tally(codes, kd, sub) {
-    var c = await load(codes, kd);
-    return codes.map(function (code) {
-      var rs = filterSub(c.recs.filter(function (r) { return r.code === code; }), sub);
-      return {
-        code: code, nama: kabOf(c, code),
-        clean: rs.filter(function (r) { return r.status === "C"; }).length,
-        error: rs.filter(function (r) { return r.status === "E"; }).length,
-        belum: rs.filter(function (r) { return r.status === "B"; }).length,
-        total: rs.length,
-      };
-    });
-  }
-
   // --- SpreadsheetML (XML Spreadsheet 2003) ---------------------------------
   function esc(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -151,5 +137,30 @@ window.SPDTRekap = (function () {
     return { operator: list.length, selesai: clean.length, total: recs.length, dates: dates };
   }
 
-  return { defaultKabs: defaultKabs, parseCodes: parseCodes, tally: tally, generate: generate };
+  // Rekap sederhana: jumlah entri per petugas (produksi / konsumsi / total) dari
+  // menu Tabulasi Progres. Data diambil saat tombol diklik (tanpa cache).
+  async function generateSimple(codes) {
+    var rows = await bridge("simple", { codes: codes });
+    var s = [["No", "Kabupaten", "Nama Petugas", "Produksi", "Konsumsi", "Total"]];
+    var no = 0, gp = 0, gk = 0, gt = 0;
+    codes.forEach(function (code) {
+      var rs = rows.filter(function (r) { return r.code === code; })
+        .sort(function (a, b) { return b.total - a.total || a.nama.localeCompare(b.nama); });
+      if (!rs.length) return;
+      var kab = rs[0].nama_kab || KNOWN[code] || code;
+      var p = 0, k = 0, t = 0;
+      rs.forEach(function (r) {
+        s.push([++no, kab, r.nama, r.produksi, r.konsumsi, r.total]);
+        p += r.produksi; k += r.konsumsi; t += r.total;
+      });
+      s.push(["", "Subtotal " + kab, "", p, k, t]);
+      gp += p; gk += k; gt += t;
+    });
+    s.push(["", "TOTAL", "", gp, gk, gt]);
+    var today = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jayapura" }).format(new Date()).replace(/-/g, "");
+    download(workbook([sheetXml("Petugas Entri", s)]), "rekap_sederhana_" + today + ".xls");
+    return { petugas: no, total: gt };
+  }
+
+  return { defaultKabs: defaultKabs, parseCodes: parseCodes, generate: generate, generateSimple: generateSimple };
 })();

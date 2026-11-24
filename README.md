@@ -6,6 +6,10 @@ Ekstensi Chrome/Edge pembantu entri SPDT NTP: penanda baris aktif, auto-save ber
 - **Penanda kuning** pada baris yang sedang aktif/diisi (klik atau fokus di baris mana pun)
 - **Auto-save berkala** di halaman edit dokumen (durasi bisa diatur; menekan tombol Simpan aplikasi)
 - **Titik jadi koma** — ketik `.` untuk menghasilkan desimal `,` di field angka
+- **Kunci navigasi blok** — tab Blok, judul blok & judul kolom tetap terlihat; hanya tabel yang di-scroll
+- **Placeholder judul kolom** — isian kosong menampilkan judul kolomnya (mis. `H-1 Jumlah`)
+- **Fuzzy search komoditas** — cari Jenis Barang di Blok V/VI tahan salah ketik & singkatan (mis. `bwg ptih`)
+- **Backup draf dokumen** ke file, **filter status & operator** di Entri Data, dan **rekap entry** (.xls)
 - Ikon ekstensi berwarna kuning
 - **Halaman pengaturan** (klik ikon ekstensi) untuk menyalakan/mematikan tiap fitur & mengatur durasi auto-save
 
@@ -84,6 +88,10 @@ Klik ikon ekstensi (kuning) di toolbar untuk membuka pengaturan:
 - **Auto-save** on/off + **Durasi** (detik, minimal 5)
 - **Titik jadi koma** on/off
 - **Penanda baris & kolom aktif** on/off (kolom aktif hanya di Blok V: judul kolom H-x / Jumlah-Nilai / nomor kolom jadi kuning, sel kolom diberi warna tipis)
+- **Kunci navigasi blok** on/off
+- **Placeholder judul kolom** on/off
+- **Fuzzy search komoditas** on/off
+- **Filter status & operator** on/off
 
 Pengaturan tersimpan otomatis dan langsung berlaku di tab SPDT yang terbuka.
 
@@ -119,8 +127,38 @@ Format ekstensi (Manifest V3) sama persis untuk Chrome dan Edge — satu folder 
 - `autosave.js` – auto-save dokumen berkala (durasi dari pengaturan)
 - `backup-hook.js` – tangkap payload PUT dokumen (MAIN world)
 - `backup.js` – simpan & kelola cadangan draf dokumen (content script)
+- `fit-blok.js` – kunci navigasi blok (tinggi area tabel pas dengan kartu)
+- `placeholder-kolom.js` – placeholder judul kolom pada isian kosong
+- `fuzzy-komoditas-hook.js` – fuzzy search dropdown komoditas (MAIN world)
+- `fuzzy-komoditas.js` – teruskan toggle fuzzy search ke MAIN world
+- `sample-filter-hook.js` / `sample-filter.js` – filter status & operator di Entri Data
 - `rekap.js` – hitung & bangun/unduh rekap .xls (popup)
 - `rekap-bridge.js` – ambil data di tab SPDT atas permintaan popup (content script)
 - `popup.html` / `popup.js` – halaman pengaturan + tombol rekap
 - `tools/rekap-entry-selesai.js` – versi console mandiri (tempel di DevTools)
 - `icons/` – ikon kuning (16/32/48/128)
+
+## Changelog
+
+### v1.16.0 — 2026-11-24
+- **Baru: fuzzy search dropdown komoditas (Blok V & VI).** Pencarian Jenis Barang kini tahan salah ketik dan singkatan, tanpa komponen baru. Dropdown, kotak cari, navigasi keyboard, dan pemilihan tetap milik aplikasi.
+  - Semua kata kunci harus cocok, urutannya bebas: `bwg ptih` / `putih bawang` → Bawang Putih, `tlur ayam`, `minyk goreng`, `clna pnjg`.
+  - Salah ketik 1–2 huruf tetap ketemu (`bawnag` → Bawang …). Kode angka dicocokkan persis (`0117052`).
+  - Hasil diurutkan dari yang paling cocok.
+- **Perbaikan (bug bawaan aplikasi):** daftar hasil cari tampak kosong bila baris sudah berisi komoditas yang letaknya jauh di bawah daftar. Hasilnya ada, tapi tergambar di luar area terlihat.
+- **Perbaikan:** nama komoditas di baris tidak lagi tampil kosong setelah dropdown ditutup dengan teks cari yang masih tertinggal. Nilai tersimpannya memang tidak pernah berubah.
+- Toggle baru di popup: **Fuzzy search komoditas**.
+
+### v1.15.0 — 2026-11-22
+- **Baru: placeholder judul kolom.** Isian kosong di tabel menampilkan judul kolomnya (`H-1 Jumlah`, `Sebulan Nilai (000 Rp)`, `Umur (Tahun)`). Judul panjang diawali nomor kolom, dengan tooltip berisi judul lengkap.
+- **Perbaikan: kunci navigasi blok** tidak lagi membuat tabel melompat ke atas saat mengubah isian di bagian bawah. Sebelumnya dropdown di baris bawah (mis. Satuan) ikut tertutup sehingga pilihan tidak tersimpan.
+- **Rekap entry:** tombol **Rekap sederhana** (jumlah entri per petugas: produksi/konsumsi/total) dan **Rekap lengkap**. Data hanya diambil saat tombol diklik.
+
+### v1.14.0 — 2026-11-18
+- Kunci navigasi blok + penanda kolom aktif di Blok V. Kolom Operator di Entri Data dihapus.
+
+### v1.12.0 — 2026-11-09
+- Filter status dokumen & operator di halaman Entri Data.
+
+### v1.9.0 — 2026-11-05
+- Backup draf dokumen ke file. Fitur freeze kolom & Enter = pindah input dihapus karena sudah native di server.
